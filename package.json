@@ -12,7 +12,7 @@
     "zod": "^3.23.8"
   },
   "scripts": {
-    "dev": "tsx src/server.js",
+    "dev": "tsx src/server.ts",
     "build": "tsup src/server.ts",	
     "start": "node dist/server.js",
     "vercel-build": "npx prisma migrate deploy"
