@@ -5,7 +5,7 @@ import { idSchema } from '../schemas/idSchema';
 
 export async function workoutRoutes(app: FastifyInstance) {
 
-    app.post('/workouts', async (request, reply) => {
+    app.post('/', async (request, reply) => {
         const { name, description, studentId, duration, type, intensity } = workoutSchema.parse(request.body);
 
         try {
@@ -16,7 +16,7 @@ export async function workoutRoutes(app: FastifyInstance) {
         }
     });
 
-    app.get('/workouts', async (request, reply) => {
+    app.get('/', async (request, reply) => {
         try {
             const workouts = await getAllWorkouts();
             reply.send(workouts);
@@ -25,7 +25,7 @@ export async function workoutRoutes(app: FastifyInstance) {
         }
     });
 
-    app.put('/workouts/:id', async (request, reply) => {
+    app.put('/:id', async (request, reply) => {
         const { id } = idSchema.parse(request.params);
         const { name, description, studentId, duration, type, intensity } = workoutSchema.parse(request.body);
 
@@ -37,7 +37,7 @@ export async function workoutRoutes(app: FastifyInstance) {
         }
     });
 
-    app.delete('/workouts/:id', async (request, reply) => {
+    app.delete('/:id', async (request, reply) => {
         const { id } = idSchema.parse(request.params);
 
         try {
