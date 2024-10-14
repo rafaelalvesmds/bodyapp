@@ -4,8 +4,13 @@ export const createTeacher = async (teacherData: { name: string; email: string }
     return await api.post('/teachers', teacherData);
 };
 
-export const getTeachers = async () => {
-    return await api.get('/teachers');
+export const getTeachers = async (page: number = 1, pageSize: number = 10) => {
+    return await api.get(`/teachers`, {
+        params: {
+            page,
+            pageSize
+        }
+    });
 };
 
 export const updateTeacher = async (id: string, teacherData: { name: string; email: string }) => {

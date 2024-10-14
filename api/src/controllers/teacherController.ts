@@ -16,12 +16,19 @@ export async function teacherRoutes(app: FastifyInstance) {
 
     app.get('/', async (request, reply) => {
         try {
-            const teachers = await getAllTeachers();
+            const { page = 1, pageSize = 10 } = request.query as { page?: number; pageSize?: number };
+            
+            const currentPage = Number(page);
+            const size = Number(pageSize);
+    
+            const teachers = await getAllTeachers(currentPage, size);
+    
             reply.send(teachers);
         } catch (error) {
             reply.code(500).send({ error: (error as Error).message });
         }
     });
+    
 
     app.put('/:id', async (request, reply) => {
         const { id } = idSchema.parse(request.params);

@@ -25,9 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
       >
         <ThemeProvider
           attribute="class"
@@ -36,7 +36,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-
         </ThemeProvider>
       </body>
     </html>

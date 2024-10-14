@@ -9,11 +9,9 @@ const api = axios.create({
     },
 });
 
-// Adicionar interceptores de resposta, autenticação, etc, se necessário
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Aqui você pode centralizar o tratamento de erros
         return Promise.reject(error.response?.data?.error || 'Erro na requisição');
     }
 );

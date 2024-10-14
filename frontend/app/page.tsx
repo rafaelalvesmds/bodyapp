@@ -1,10 +1,13 @@
-import { z } from "zod"
 import TeacherForm from "./teacher"
-
 
 export default function Home() {
 
   return (
-    <TeacherForm />
+    <div className="p-2 grid justify-items-center items-center h-full">
+      <TeacherForm /> 
+     
+
+
+    </div>
   )
 }
