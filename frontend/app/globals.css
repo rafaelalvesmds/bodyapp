@@ -76,3 +76,18 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes indeterminate {
+  0% {
+    left: -100%;
+    width: 100%;
+  }
+  100% {
+    left: 100%;
+    width: 10%;
+  }
+}
+
+.animate-indeterminate {
+  animation: indeterminate 1.5s infinite linear;
+}

@@ -56,6 +56,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
+import React from "react"
 
 
 const teacherSchema = z.object({
@@ -63,11 +64,17 @@ const teacherSchema = z.object({
     email: z.string().email(),
 })
 
+
 export default function TeacherForm() {
+
 
     const [currentPage, setCurrentPage] = useState(1)
 
     const [teachers, setTeachers] = useState<TeacherModel[]>([])
+
+    const [loading, setLoading] = useState(true)
+
+    const [dialogOpen, setDialogOpen] = useState(false)
 
     const form = useForm<z.infer<typeof teacherSchema>>({
         resolver: zodResolver(teacherSchema),
@@ -78,11 +85,13 @@ export default function TeacherForm() {
     })
 
     const fetchTeachers = async (page: number) => {
+        setLoading(true)
+
         try {
             const response = await getTeachers(page)
             console.log("response", response.data)
             setTeachers(response.data.teachers)
-            console.log("response", response.data)
+            setLoading(false)
         } catch (error) {
             console.error("Erro ao buscar professores", error)
         }
@@ -92,83 +101,37 @@ export default function TeacherForm() {
         fetchTeachers(currentPage)
     }, [currentPage])
 
+
     async function onSubmit(value: z.infer<typeof teacherSchema>) {
-
-
-        console.log(value, "add professor")
+        console.log(form, 'form')
         try {
             let response = await createTeacher(value)
-            alert("Professor cadastrado com sucesso!")
-            setTeachers((prevTeachers) => [...prevTeachers, response.data])
-            form.reset()
+
+            fetchTeachers(currentPage);
+            form.reset();
         } catch (error: any) {
             alert(`Erro ao cadastrar professor: ${error}`)
         }
     }
 
+    async function edit(teacher: TeacherModel) {
+        console.log("edit", teacher)
+        setDialogOpen(true)
+    }
+
     return (
-        <Card className="w-1/2 ">
-            <CardHeader className="flex flex-row justify-between items-center">
+        <Card className="min-w-96 w-4/6">
+            <CardHeader className="flex flex-row justify-between items-center p-4">
                 <CardTitle>Professores</CardTitle>
 
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button variant="outline">
-                            <PlusIcon className="mr-2" />
-                            Cadastrar novo
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle className="mb-4">Novo professor</DialogTitle>
-                            <DialogDescription>
-                                Preencha os dados do novo professor abaixo. Clique em cadastrar quando terminar.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormControl>
-                                                <Input placeholder="Nome" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormControl>
-                                                <Input placeholder="Email" type="email" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </form>
-                        </Form>
-
-                        <DialogFooter>
-                            <DialogClose asChild>
-                                <Button type="button" variant="secondary" onClick={form.handleSubmit(onSubmit)}>
-                                    Cadastrar
-                                </Button>
-                            </DialogClose>
-                        </DialogFooter>
-
-                    </DialogContent>
-                </Dialog>
+                <Button variant="outline" onClick={() => setDialogOpen(true)}>
+                    <PlusIcon className="mr-2" />
+                    Cadastrar novo
+                </Button>
             </CardHeader>
 
-            <CardContent className="space-y-8">
-                <Table className="overflow-hidden">
+            <CardContent className="space-y-2 p-3">
+                <Table className="overflow-hidden w-full">
                     <TableHeader>
                         <TableRow>
                             <TableHead>Nome</TableHead>
@@ -180,14 +143,14 @@ export default function TeacherForm() {
                             Array.from({ length: 10 }).map((_, index) => (
                                 <TableRow key={index}>
                                     <TableCell>
-                                        <Skeleton className="h-[36px] w-[100px] rounded" />
+                                        <Skeleton className="h-[28px] w-[100px] rounded" />
                                     </TableCell>
                                     <TableCell>
-                                        <Skeleton className="h-[36px] w-[150px] rounded" />
+                                        <Skeleton className="h-[28px] w-[100px] rounded" />
                                     </TableCell>
                                     <TableCell className="flex gap-x-2 justify-end">
-                                        <Skeleton className="h-[36px] w-[30px] rounded" />
-                                        <Skeleton className="h-[36px] w-[30px] rounded" />
+                                        <Skeleton className="h-[28px] w-[28px] rounded" />
+                                        <Skeleton className="h-[28px] w-[28px] rounded" />
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -197,10 +160,10 @@ export default function TeacherForm() {
                                     <TableCell>{teacher.name}</TableCell>
                                     <TableCell>{teacher.email}</TableCell>
                                     <TableCell className="flex gap-x-2 justify-end">
-                                        <Button size="icon" variant="secondary">
+                                        <Button className="h-7 w-7" size="icon" variant="secondary" onClick={() => { edit(teacher) }}>
                                             <Pencil1Icon />
                                         </Button>
-                                        <Button variant="destructive" size="icon">
+                                        <Button className="h-7 w-7" size="icon" variant="destructive" >
                                             <TrashIcon />
                                         </Button>
                                     </TableCell>
@@ -208,10 +171,21 @@ export default function TeacherForm() {
                             ))
                         )}
                     </TableBody>
-                    <TableFooter>
+                    <TableFooter >
 
                     </TableFooter>
                 </Table>
+
+                {loading ? (
+                    <div className="h-1 bg-gray-600 relative overflow-hidden rounded">
+                        <div className="absolute left-0 top-0 h-full w-full bg-gray-200 animate-indeterminate"></div>
+                    </div>
+                ) : (
+                    <div className="h-1  relative overflow-hidden rounded">
+                    </div>
+                )}
+
+
                 <Pagination>
                     <PaginationContent>
                         <PaginationItem>
@@ -247,7 +221,56 @@ export default function TeacherForm() {
 
             </CardContent>
 
+            <Dialog open={dialogOpen} >
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="mb-4">Novo professor</DialogTitle>
+                    </DialogHeader>
 
+                    <Form {...form}>
+                        <form className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input placeholder="Nome" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input placeholder="Email" type="email" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </form>
+                    </Form>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={async () => {
+                                    await form.handleSubmit(onSubmit)();
+                                }}
+                            >
+                                Cadastrar
+                            </Button>
+                        </DialogClose>
+                    </DialogFooter>
+
+                </DialogContent>
+            </Dialog>
         </Card>
 
 
