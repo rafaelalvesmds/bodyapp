@@ -57,6 +57,7 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination"
 import React from "react"
+import { Label } from "@/components/ui/label"
 
 const teacherSchema = z.object({
     id: z.string().nullable(),
@@ -67,9 +68,12 @@ const teacherSchema = z.object({
 export default function TeacherForm() {
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPages, setTotalPages] = useState(0)
-    const [teachers, setTeachers] = useState<TeacherModel[]>([])
+    const [totalRecords, setTotalRecords] = useState(0)
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
+
+    const [teachers, setTeachers] = useState<TeacherModel[]>([])
+
 
     const form = useForm<z.infer<typeof teacherSchema>>({
         resolver: zodResolver(teacherSchema),
@@ -87,6 +91,7 @@ export default function TeacherForm() {
             console.log("response", response.data)
             setTeachers(response.data.teachers)
             setTotalPages(response.data.totalPages)
+            setTotalRecords(response.data.total)
         } catch (error) {
             console.error("Erro ao buscar professores", error)
         } finally {
@@ -101,7 +106,12 @@ export default function TeacherForm() {
     async function onSubmit(value: z.infer<typeof teacherSchema>) {
         console.log(value, 'value')
         if (value.id) {
-            await updateTeacher(value.id, { name: value.name, email: value.email })
+            try {
+
+                await updateTeacher(value.id, { name: value.name, email: value.email })
+            } catch (error: any) {
+                alert(`Erro ao atualizar professor: ${error}`)
+            }
         } else {
             try {
                 await createTeacher(value)
@@ -128,10 +138,10 @@ export default function TeacherForm() {
     }
 
     return (
-        <Card className="min-w-96 w-4/6">
+        <Card className="min-w-96 w-4/6 max-w-5xl">
             <CardHeader className="flex flex-row justify-between items-center p-4">
-                <CardTitle>Professores</CardTitle>
-                <Button variant="outline" onClick={() => setDialogOpen(true)}>
+                <CardTitle>Professores ({totalRecords})</CardTitle>
+                <Button variant="outline" onClick={() => { setDialogOpen(true); form.reset() }}>
                     <PlusIcon className="mr-2" />
                     Cadastrar novo
                 </Button>
@@ -186,10 +196,15 @@ export default function TeacherForm() {
                 ) : (
                     <div className="h-1 relative overflow-hidden rounded"></div>
                 )}
+
                 <Pagination>
-                    <PaginationContent>
+                    <PaginationContent className=" flex justify-between w-full">
                         <PaginationItem>
+                            <Label className="mr-2 text-xs">{currentPage} de {totalPages}</Label>
+                        </PaginationItem>
+                        <PaginationItem className="flex flex-row align-center">
                             <PaginationPrevious
+                                size="sm"
                                 className="cursor-pointer"
                                 onClick={() => {
                                     if (currentPage > 1) {
@@ -198,9 +213,8 @@ export default function TeacherForm() {
                                 }}
                                 style={{ pointerEvents: currentPage === 1 ? 'none' : 'auto', opacity: currentPage === 1 ? 0.5 : 1 }}
                             />
-                        </PaginationItem>
-                        <PaginationItem>
                             <PaginationNext
+                                size="sm"
                                 className="cursor-pointer"
                                 onClick={() => {
                                     if (currentPage < totalPages) {
@@ -210,8 +224,10 @@ export default function TeacherForm() {
                                 style={{ pointerEvents: teachers.length < 10 || currentPage === totalPages ? 'none' : 'auto', opacity: teachers.length < 10 || currentPage === totalPages ? 0.5 : 1 }}
                             />
                         </PaginationItem>
+
                     </PaginationContent>
                 </Pagination>
+
             </CardContent>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
