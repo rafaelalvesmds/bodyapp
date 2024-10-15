@@ -30,7 +30,7 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 
-import { createTeacher, getTeachers } from "@/core/services/teacherService"
+import { createTeacher, deleteTeacher, getTeachers, updateTeacher } from "@/core/services/teacherService"
 import { TeacherModel } from "./models/teacherModel"
 import { useEffect, useState } from "react"
 import {
@@ -58,27 +58,23 @@ import {
 } from "@/components/ui/pagination"
 import React from "react"
 
-
 const teacherSchema = z.object({
+    id: z.string().nullable(),
     name: z.string(),
     email: z.string().email(),
 })
 
-
 export default function TeacherForm() {
-
-
     const [currentPage, setCurrentPage] = useState(1)
-
+    const [totalPages, setTotalPages] = useState(0)
     const [teachers, setTeachers] = useState<TeacherModel[]>([])
-
     const [loading, setLoading] = useState(true)
-
     const [dialogOpen, setDialogOpen] = useState(false)
 
     const form = useForm<z.infer<typeof teacherSchema>>({
         resolver: zodResolver(teacherSchema),
         defaultValues: {
+            id: null,
             name: "",
             email: "",
         },
@@ -86,14 +82,15 @@ export default function TeacherForm() {
 
     const fetchTeachers = async (page: number) => {
         setLoading(true)
-
         try {
             const response = await getTeachers(page)
             console.log("response", response.data)
             setTeachers(response.data.teachers)
-            setLoading(false)
+            setTotalPages(response.data.totalPages)
         } catch (error) {
             console.error("Erro ao buscar professores", error)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -101,37 +98,46 @@ export default function TeacherForm() {
         fetchTeachers(currentPage)
     }, [currentPage])
 
-
     async function onSubmit(value: z.infer<typeof teacherSchema>) {
-        console.log(form, 'form')
-        try {
-            let response = await createTeacher(value)
-
-            fetchTeachers(currentPage);
-            form.reset();
-        } catch (error: any) {
-            alert(`Erro ao cadastrar professor: ${error}`)
+        console.log(value, 'value')
+        if (value.id) {
+            await updateTeacher(value.id, { name: value.name, email: value.email })
+        } else {
+            try {
+                await createTeacher(value)
+            } catch (error: any) {
+                alert(`Erro ao cadastrar professor: ${error}`)
+            }
         }
+        fetchTeachers(currentPage)
+        form.reset()
     }
 
     async function edit(teacher: TeacherModel) {
-        console.log("edit", teacher)
+        form.setValue("id", teacher.id ?? null)
+        form.setValue("name", teacher.name)
+        form.setValue("email", teacher.email)
         setDialogOpen(true)
+    }
+
+    async function drop(id?: string) {
+        if (id) {
+            await deleteTeacher(id)
+            fetchTeachers(currentPage)
+        }
     }
 
     return (
         <Card className="min-w-96 w-4/6">
             <CardHeader className="flex flex-row justify-between items-center p-4">
                 <CardTitle>Professores</CardTitle>
-
                 <Button variant="outline" onClick={() => setDialogOpen(true)}>
                     <PlusIcon className="mr-2" />
                     Cadastrar novo
                 </Button>
             </CardHeader>
-
             <CardContent className="space-y-2 p-3">
-                <Table className="overflow-hidden w-full">
+                <Table className={`overflow-hidden w-full ${loading ? 'pointer-events-none opacity-60' : ''}`}>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Nome</TableHead>
@@ -163,7 +169,7 @@ export default function TeacherForm() {
                                         <Button className="h-7 w-7" size="icon" variant="secondary" onClick={() => { edit(teacher) }}>
                                             <Pencil1Icon />
                                         </Button>
-                                        <Button className="h-7 w-7" size="icon" variant="destructive" >
+                                        <Button className="h-7 w-7" size="icon" variant="destructive" onClick={() => { drop(teacher.id) }}>
                                             <TrashIcon />
                                         </Button>
                                     </TableCell>
@@ -171,21 +177,15 @@ export default function TeacherForm() {
                             ))
                         )}
                     </TableBody>
-                    <TableFooter >
-
-                    </TableFooter>
+                    <TableFooter />
                 </Table>
-
                 {loading ? (
                     <div className="h-1 bg-gray-600 relative overflow-hidden rounded">
                         <div className="absolute left-0 top-0 h-full w-full bg-gray-200 animate-indeterminate"></div>
                     </div>
                 ) : (
-                    <div className="h-1  relative overflow-hidden rounded">
-                    </div>
+                    <div className="h-1 relative overflow-hidden rounded"></div>
                 )}
-
-
                 <Pagination>
                     <PaginationContent>
                         <PaginationItem>
@@ -193,11 +193,7 @@ export default function TeacherForm() {
                                 className="cursor-pointer"
                                 onClick={() => {
                                     if (currentPage > 1) {
-                                        setCurrentPage((prevPage) => {
-                                            const newPage = prevPage - 1;
-                                            fetchTeachers(newPage);
-                                            return newPage;
-                                        });
+                                        setCurrentPage((currentPage) => currentPage - 1)
                                     }
                                 }}
                                 style={{ pointerEvents: currentPage === 1 ? 'none' : 'auto', opacity: currentPage === 1 ? 0.5 : 1 }}
@@ -207,26 +203,21 @@ export default function TeacherForm() {
                             <PaginationNext
                                 className="cursor-pointer"
                                 onClick={() => {
-                                    setCurrentPage((prevPage) => {
-                                        const newPage = prevPage + 1;
-                                        fetchTeachers(newPage);
-                                        return newPage;
-                                    });
+                                    if (currentPage < totalPages) {
+                                        setCurrentPage((currentPage) => currentPage + 1)
+                                    }
                                 }}
-                                style={{ pointerEvents: teachers.length < 10 ? 'none' : 'auto', opacity: teachers.length < 10 ? 0.5 : 1 }}
+                                style={{ pointerEvents: teachers.length < 10 || currentPage === totalPages ? 'none' : 'auto', opacity: teachers.length < 10 || currentPage === totalPages ? 0.5 : 1 }}
                             />
                         </PaginationItem>
                     </PaginationContent>
                 </Pagination>
-
             </CardContent>
-
-            <Dialog open={dialogOpen} >
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle className="mb-4">Novo professor</DialogTitle>
                     </DialogHeader>
-
                     <Form {...form}>
                         <form className="space-y-4">
                             <FormField
@@ -261,20 +252,16 @@ export default function TeacherForm() {
                                 type="button"
                                 variant="secondary"
                                 onClick={async () => {
-                                    await form.handleSubmit(onSubmit)();
+                                    await form.handleSubmit(onSubmit)()
                                 }}
+                                disabled={!form.formState.isValid}
                             >
                                 Cadastrar
                             </Button>
                         </DialogClose>
                     </DialogFooter>
-
                 </DialogContent>
             </Dialog>
         </Card>
-
-
-
-
     )
 }
