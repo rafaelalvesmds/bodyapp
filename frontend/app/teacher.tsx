@@ -200,7 +200,7 @@ export default function TeacherForm() {
                 <Pagination>
                     <PaginationContent className=" flex justify-between w-full">
                         <PaginationItem>
-                            <Label className="mr-2 text-xs">{currentPage} de {totalPages}</Label>
+                            <Label className="mr-2 text-xs text-muted-foreground">Página {currentPage} de {totalPages}</Label>
                         </PaginationItem>
                         <PaginationItem className="flex flex-row align-center">
                             <PaginationPrevious
