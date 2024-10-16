@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/pagination"
 import React from "react"
 import { Label } from "@/components/ui/label"
+import { ModeToggle } from "@/components/ui/mode-toggle"
 
 const teacherSchema = z.object({
     id: z.string().nullable(),
@@ -140,6 +141,7 @@ export default function TeacherForm() {
     return (
         <Card className="min-w-96 w-4/6 max-w-5xl">
             <CardHeader className="flex flex-row justify-between items-center p-4">
+                <ModeToggle/>
                 <CardTitle>Professores ({totalRecords})</CardTitle>
                 <Button variant="outline" onClick={() => { setDialogOpen(true); form.reset() }}>
                     <PlusIcon className="mr-2" />
