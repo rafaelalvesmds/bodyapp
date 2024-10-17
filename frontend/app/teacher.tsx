@@ -58,6 +58,8 @@ import {
 } from "@/components/ui/pagination"
 import React from "react"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+
 
 const teacherSchema = z.object({
     id: z.string().nullable(),
@@ -92,10 +94,10 @@ export default function TeacherForm() {
             setTeachers(response.data.teachers)
             setTotalPages(response.data.totalPages)
             setTotalRecords(response.data.total)
+            setLoading(false)
         } catch (error) {
             console.error("Erro ao buscar professores", error)
         } finally {
-            setLoading(false)
         }
     }
 
@@ -140,10 +142,23 @@ export default function TeacherForm() {
     return (
         <Card className="min-w-96 w-4/6 max-w-5xl">
             <CardHeader className="flex flex-row justify-between items-center p-4">
-                <CardTitle>Professores ({totalRecords})</CardTitle>
-                <Button variant="outline" onClick={() => { setDialogOpen(true); form.reset() }}>
-                    <PlusIcon className="mr-2" />
-                    Cadastrar novo
+
+
+                <CardTitle className="flex flex-row items-center space-x-3">
+                    <Label className="text-xl">Professores</Label>
+
+                    {loading ? (
+                        <Skeleton className="h-[22px] w-[28px] rounded" />
+                    ) : (
+                        <Badge variant="secondary">{totalRecords}</Badge>
+                    )}
+
+                </CardTitle>
+
+
+                <Button size="sm" className="flex flex-row items-center space-x-1" onClick={() => { setDialogOpen(true); form.reset() }}>
+                    <PlusIcon className="font-bold" />
+                    <Label className="cursor-pointer font-semibold">Cadastrar novo</Label>
                 </Button>
             </CardHeader>
             <CardContent className="space-y-2 p-3">
@@ -173,8 +188,8 @@ export default function TeacherForm() {
                         ) : (
                             teachers.map((teacher) => (
                                 <TableRow key={teacher.id}>
-                                    <TableCell>{teacher.name}</TableCell>
-                                    <TableCell>{teacher.email}</TableCell>
+                                    <TableCell className="text-xs">{teacher.name}</TableCell>
+                                    <TableCell className="text-xs">{teacher.email}</TableCell>
                                     <TableCell className="flex gap-x-2 justify-end">
                                         <Button className="h-7 w-7" size="icon" variant="secondary" onClick={() => { edit(teacher) }}>
                                             <Pencil1Icon />
@@ -200,7 +215,12 @@ export default function TeacherForm() {
                 <Pagination>
                     <PaginationContent className=" flex justify-between w-full">
                         <PaginationItem>
-                            <Label className="mr-2 text-xs text-muted-foreground">Página {currentPage} de {totalPages}</Label>
+                            {loading ? (
+                                <Skeleton className="h-[14px] w-[50px] rounded" />
+                            ) : (
+                                <Label className="mr-2 text-xs text-muted-foreground">Página {currentPage} de {totalPages}</Label>
+                            )}
+
                         </PaginationItem>
                         <PaginationItem className="flex flex-row align-center">
                             <PaginationPrevious
@@ -266,7 +286,6 @@ export default function TeacherForm() {
                         <DialogClose asChild>
                             <Button
                                 type="button"
-                                variant="secondary"
                                 onClick={async () => {
                                     await form.handleSubmit(onSubmit)()
                                 }}
