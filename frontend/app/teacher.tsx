@@ -58,8 +58,7 @@ import {
 } from "@/components/ui/pagination"
 import React from "react"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-
+import { ModeToggle } from "@/components/ui/mode-toggle"
 
 const teacherSchema = z.object({
     id: z.string().nullable(),
