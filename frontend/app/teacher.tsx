@@ -59,6 +59,7 @@ import {
 import React from "react"
 import { Label } from "@/components/ui/label"
 import { ModeToggle } from "@/components/ui/mode-toggle"
+import { Badge } from "@/components/ui/badge"
 
 const teacherSchema = z.object({
     id: z.string().nullable(),
